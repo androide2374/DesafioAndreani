@@ -1,18 +1,11 @@
-using Api.Geo.Configuration;
 using Api.Geo.Context;
-using Api.Geo.Controllers;
-using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using EasyNetQ;
 
 namespace Api.Geo
 {
@@ -31,14 +24,11 @@ namespace Api.Geo
 
             services.AddDbContext<AppDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("MiDB")));
 
-            services.Configure<RabbitMqConfiguration>(Configuration.GetSection("RabbitMqGeocodificar"));
-            var RabbitConfig = Configuration
-                .GetSection("RabbitMqGeocodificar")
-                .Get<RabbitMqConfiguration>();
-            services.AddSingleton(RabbitConfig);
-            services.AddSingleton<RabbitManagement>();
-
             services.AddControllers();
+
+            var bus = RabbitHutch.CreateBus(Configuration.GetConnectionString("RabbitMQConnectionString"));
+
+            services.AddSingleton(bus);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
